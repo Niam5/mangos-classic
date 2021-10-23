@@ -18,6 +18,10 @@
 #include "system/ScriptLoader.h"
 #endif
 
+#ifdef BUILD_ELUNA
+#include "LuaEngine/LuaEngine.h"
+#endif
+
 INSTANTIATE_SINGLETON_1(ScriptDevAIMgr);
 
 void FillSpellSummary();
@@ -163,6 +167,11 @@ void Script::RegisterSelf(bool bReportError)
 
 bool ScriptDevAIMgr::OnGossipHello(Player* pPlayer, Creature* pCreature)
 {
+#ifdef BUILD_ELUNA
+    if (sEluna->OnGossipHello(pPlayer, pCreature))
+        return true;
+#endif
+
     Script* pTempScript = GetScript(pCreature->GetScriptId());
 
     if (!pTempScript || !pTempScript->pGossipHello)
@@ -175,6 +184,11 @@ bool ScriptDevAIMgr::OnGossipHello(Player* pPlayer, Creature* pCreature)
 
 bool ScriptDevAIMgr::OnGossipHello(Player* pPlayer, GameObject* pGo)
 {
+#ifdef BUILD_ELUNA
+    if (sEluna->OnGossipHello(pPlayer, pGo))
+        return true;
+#endif
+
     Script* pTempScript = GetScript(pGo->GetGOInfo()->ScriptId);
 
     if (!pTempScript || !pTempScript->pGossipHelloGO)
@@ -187,6 +201,19 @@ bool ScriptDevAIMgr::OnGossipHello(Player* pPlayer, GameObject* pGo)
 
 bool ScriptDevAIMgr::OnGossipSelect(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction, const char* code)
 {
+#ifdef BUILD_ELUNA
+    if (code)
+    {
+        if (sEluna->OnGossipSelectCode(pPlayer, pCreature, uiSender, uiAction, code))
+            return true;
+    }
+    else
+    {
+        if (sEluna->OnGossipSelect(pPlayer, pCreature, uiSender, uiAction))
+            return true;
+    }
+#endif
+
     debug_log("SD2: Gossip selection, sender: %u, action: %u", uiSender, uiAction);
 
     Script* pTempScript = GetScript(pCreature->GetScriptId());
@@ -212,6 +239,19 @@ bool ScriptDevAIMgr::OnGossipSelect(Player* pPlayer, Creature* pCreature, uint32
 
 bool ScriptDevAIMgr::OnGossipSelect(Player* pPlayer, GameObject* pGo, uint32 uiSender, uint32 uiAction, const char* code)
 {
+#ifdef BUILD_ELUNA
+    if (code)
+    {
+        if (sEluna->OnGossipSelectCode(pPlayer, pGo, uiSender, uiAction, code))
+            return true;
+    }
+    else
+    {
+        if (sEluna->OnGossipSelect(pPlayer, pGo, uiSender, uiAction))
+            return true;
+    }
+#endif
+
     debug_log("SD2: GO Gossip selection, sender: %u, action: %u", uiSender, uiAction);
 
     Script* pTempScript = GetScript(pGo->GetGOInfo()->ScriptId);
@@ -273,6 +313,11 @@ bool ScriptDevAIMgr::OnQuestAccept(Player* pPlayer, Creature* pCreature, const Q
 
 bool ScriptDevAIMgr::OnQuestAccept(Player* pPlayer, GameObject* pGo, const Quest* pQuest)
 {
+#ifdef BUILD_ELUNA
+    if (sEluna->OnQuestAccept(pPlayer, pGo, pQuest))
+        return true;
+#endif
+
     Script* pTempScript = GetScript(pGo->GetGOInfo()->ScriptId);
 
     if (!pTempScript || !pTempScript->pQuestAcceptGO)
@@ -285,6 +330,11 @@ bool ScriptDevAIMgr::OnQuestAccept(Player* pPlayer, GameObject* pGo, const Quest
 
 bool ScriptDevAIMgr::OnQuestAccept(Player* pPlayer, Item* pItem, Quest const* pQuest)
 {
+#ifdef BUILD_ELUNA
+    if (sEluna->OnQuestAccept(pPlayer, pItem, pQuest))
+        return true;
+#endif
+
     Script* pTempScript = GetScript(pItem->GetProto()->ScriptId);
 
     if (!pTempScript || !pTempScript->pQuestAcceptItem)
@@ -297,6 +347,11 @@ bool ScriptDevAIMgr::OnQuestAccept(Player* pPlayer, Item* pItem, Quest const* pQ
 
 bool ScriptDevAIMgr::OnGameObjectUse(Player* pPlayer, GameObject* pGo)
 {
+#ifdef BUILD_ELUNA
+    if (sEluna->OnGameObjectUse(pPlayer, pGo))
+        return true;
+#endif
+
     Script* pTempScript = GetScript(pGo->GetGOInfo()->ScriptId);
 
     if (!pTempScript || !pTempScript->pGOUse)
@@ -341,6 +396,11 @@ bool ScriptDevAIMgr::OnQuestRewarded(Player* pPlayer, GameObject* pGo, Quest con
 
 bool ScriptDevAIMgr::OnAreaTrigger(Player* pPlayer, AreaTriggerEntry const* atEntry)
 {
+#ifdef BUILD_ELUNA
+    if (sEluna->OnAreaTrigger(pPlayer, atEntry))
+        return true;
+#endif
+
     Script* pTempScript = GetScript(GetAreaTriggerScriptId(atEntry->id));
 
     if (!pTempScript || !pTempScript->pAreaTrigger)
@@ -362,6 +422,11 @@ bool ScriptDevAIMgr::OnProcessEvent(uint32 uiEventId, Object* pSource, Object* p
 
 UnitAI* ScriptDevAIMgr::GetCreatureAI(Creature* pCreature) const
 {
+#ifdef BUILD_ELUNA
+    if (CreatureAI* luaAI = sEluna->GetAI(pCreature))
+        return luaAI;
+#endif
+
     Script* pTempScript = GetScript(pCreature->GetScriptId());
 
     if (!pTempScript || !pTempScript->GetAI)
@@ -382,6 +447,11 @@ GameObjectAI* ScriptDevAIMgr::GetGameObjectAI(GameObject* gameobject) const
 
 bool ScriptDevAIMgr::OnItemUse(Player* pPlayer, Item* pItem, SpellCastTargets const& targets)
 {
+#ifdef BUILD_ELUNA
+    if (!sEluna->OnUse(pPlayer, pItem, targets))
+        return true;
+#endif
+
     Script* pTempScript = GetScript(pItem->GetProto()->ScriptId);
 
     if (!pTempScript || !pTempScript->pItemUse)

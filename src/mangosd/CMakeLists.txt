@@ -48,6 +48,10 @@ if(WIN32)
   endif()
 endif()
 
+include_directories(
+  ${CMAKE_SOURCE_DIR}/dep/lualib
+)
+
 add_executable(${EXECUTABLE_NAME}
   ${EXECUTABLE_SRCS}
 )
@@ -89,7 +93,7 @@ if(WIN32)
   add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/game/Anticheat/module/warden_modules/ $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/warden_modules
     DEPENDS ${EXECUTABLE_NAME})
-	
+
   if(BUILD_PLAYERBOT)
     add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
 	  COMMAND ${CMAKE_COMMAND} -E copy_if_different \"${CMAKE_SOURCE_DIR}/src/game/PlayerBot/playerbot.conf.dist.in\" \"$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/playerbot.conf.dist\")
@@ -98,6 +102,14 @@ if(WIN32)
   if(BUILD_AHBOT)
     add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
 	  COMMAND ${CMAKE_COMMAND} -E copy_if_different \"${CMAKE_SOURCE_DIR}/src/game/AuctionHouseBot/ahbot.conf.dist.in\" \"$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/ahbot.conf.dist\")
+  endif()
+  
+  if(BUILD_ELUNA)
+    add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/game/LuaEngine/extensions/ $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/lua_scripts/extensions
+      DEPENDS ${EXECUTABLE_NAME})
+    add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different \"${CMAKE_SOURCE_DIR}/contrib/lua_scripts/masterscript.lua\" \"$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/lua_scripts/masterscript.lua\")
   endif()
 endif()
 
@@ -132,6 +144,13 @@ endif()
 if (BUILD_AHBOT)
   configure_file(${CMAKE_SOURCE_DIR}/src/game/AuctionHouseBot/ahbot.conf.dist.in ${CMAKE_CURRENT_BINARY_DIR}/ahbot.conf.dist)
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ahbot.conf.dist DESTINATION ${CONF_DIR})
+endif()
+
+# Define BUILD_ELUNA if needed
+if (BUILD_ELUNA)
+  add_definitions(-DBUILD_ELUNA -DCLASSIC -DCMANGOS)
+  install(FILES ${CMAKE_SOURCE_DIR}/contrib/lua_scripts/masterscript.lua DESTINATION ${BIN_DIR}/lua_scripts)
+  install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/game/LuaEngine/extensions DESTINATION ${BIN_DIR}/lua_scripts)
 endif()
 
 if(MSVC)

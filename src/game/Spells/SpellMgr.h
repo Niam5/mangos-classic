@@ -2281,6 +2281,7 @@ inline bool IsProfessionOrRidingSkill(uint32 skill)
 }
 
 typedef std::map<uint32, uint32> SpellFacingFlagMap;
+typedef std::vector<std::unique_ptr<SpellEntry>> SpellEntryMap;
 
 class SpellMgr
 {

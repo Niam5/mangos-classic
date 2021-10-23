@@ -69,6 +69,10 @@
 #include "Anticheat/Anticheat.hpp"
 #include "LFG/LFGMgr.h"
 
+#ifdef BUILD_ELUNA
+#include "LuaEngine/LuaEngine.h"
+#endif
+
 #ifdef BUILD_AHBOT
  #include "AuctionHouseBot/AuctionHouseBot.h"
 #endif
@@ -581,6 +585,7 @@ void World::LoadConfigSettings(bool reload)
     setConfig(CONFIG_BOOL_GM_LOWER_SECURITY, "GM.LowerSecurity", false);
     setConfig(CONFIG_UINT32_GM_INVISIBLE_AURA, "GM.InvisibleAura", 31748);
     setConfig(CONFIG_BOOL_GM_TICKETS_QUEUE_STATUS, "GM.TicketsQueueStatus", true);
+    setConfig(CONFIG_UINT32_GROUP_VISIBILITY, "Visibility.GroupMode", 0);
 
     setConfig(CONFIG_UINT32_FOGOFWAR_STEALTH, "Visibility.FogOfWar.Stealth", 0);
     setConfig(CONFIG_UINT32_FOGOFWAR_HEALTH, "Visibility.FogOfWar.Health", 0);
@@ -675,6 +680,7 @@ void World::LoadConfigSettings(bool reload)
     setConfigMinMax(CONFIG_FLOAT_GHOST_RUN_SPEED_WORLD,   "Death.Ghost.RunSpeed.World", 1.0f, 0.1f, 10.0f);
     setConfigMinMax(CONFIG_FLOAT_GHOST_RUN_SPEED_BG,      "Death.Ghost.RunSpeed.Battleground", 1.0f, 0.1f, 10.0f);
 
+    setConfig(CONFIG_FLOAT_THREAT_RADIUS, "ThreatRadius", 100.0f);
     setConfig(CONFIG_FLOAT_LEASH_RADIUS, "LeashRadius", 30.f);
     setConfigMin(CONFIG_UINT32_CREATURE_RESPAWN_AGGRO_DELAY, "CreatureRespawnAggroDelay", 5000, 0);
     setConfig(CONFIG_UINT32_CREATURE_PICKPOCKET_RESTOCK_DELAY, "CreaturePickpocketRestockDelay", 600);
@@ -809,6 +815,11 @@ void World::LoadConfigSettings(bool reload)
     setConfig(CONFIG_BOOL_PATH_FIND_OPTIMIZE, "PathFinder.OptimizePath", true);
     setConfig(CONFIG_BOOL_PATH_FIND_NORMALIZE_Z, "PathFinder.NormalizeZ", false);
 
+#ifdef BUILD_ELUNA
+    setConfig(CONFIG_BOOL_ELUNA_ENABLED, "Eluna.Enabled", true);
+    if (reload)
+        sEluna->OnConfigLoad(reload);
+#endif
     sLog.outString();
 }
 
@@ -908,6 +919,12 @@ void World::SetInitialWorldSettings()
     ///- Init highest guids before any guid using table loading to prevent using not initialized guids in some code.
     sObjectMgr.SetHighestGuids();                           // must be after packing instances
     sLog.outString();
+
+#ifdef BUILD_ELUNA
+    ///- Initialize Lua Engine
+    sLog.outString("Initialize Eluna Lua Engine...");
+    Eluna::Initialize();
+#endif
 
     sLog.outString("Loading Page Texts...");
     sObjectMgr.LoadPageTexts();
@@ -1388,6 +1405,15 @@ void World::SetInitialWorldSettings()
 #ifdef BUILD_PLAYERBOT
     PlayerbotMgr::SetInitialWorldSettings();
 #endif
+
+#ifdef BUILD_ELUNA
+    ///- Run eluna scripts.
+    // in multithread foreach: run scripts
+    sEluna->RunScripts();
+    sEluna->OnConfigLoad(false); // Must be done after Eluna is initialized and scripts have run
+    sLog.outString();
+#endif
+
     sLog.outString("---------------------------------------");
     sLog.outString("      CMANGOS: World initialized       ");
     sLog.outString("---------------------------------------");
@@ -1528,6 +1554,11 @@ void World::Update(uint32 diff)
     sWorldState.Update(diff);
 #ifdef BUILD_METRICS
     auto postSingletonTime = std::chrono::time_point_cast<std::chrono::milliseconds>(Clock::now());
+#endif
+
+#ifdef BUILD_ELUNA
+    ///- used by eluna
+    sEluna->OnWorldUpdate(diff);
 #endif
     ///- Update groups with offline leaders
     if (m_timers[WUPDATE_GROUPS].Passed())
@@ -2008,6 +2039,10 @@ void World::ShutdownServ(uint32 time, uint32 options, uint8 exitcode)
         m_ShutdownTimer = time;
         ShutdownMsg(true);
     }
+#ifdef BUILD_ELUNA
+    ///- Used by Eluna
+    sEluna->OnShutdownInitiate(ShutdownExitCode(exitcode), ShutdownMask(options));
+#endif
 }
 
 /// Display a shutdown message to the user(s)
@@ -2050,6 +2085,11 @@ void World::ShutdownCancel()
     SendServerMessage(msgid);
 
     DEBUG_LOG("Server %s cancelled.", (m_ShutdownMask & SHUTDOWN_MASK_RESTART ? "restart" : "shutdown"));
+
+#ifdef BUILD_ELUNA
+    ///- Used by Eluna
+    sEluna->OnShutdownCancel();
+#endif
 }
 
 void World::UpdateSessions(uint32 diff)

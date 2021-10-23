@@ -41,6 +41,10 @@
 #include "AI/ScriptDevAI/ScriptDevAIMgr.h"
 #include "BattleGround/BattleGroundMgr.h"
 
+#ifdef BUILD_ELUNA
+#include "LuaEngine/LuaEngine.h"
+#endif
+
 #ifdef BUILD_METRICS
  #include "Metric/Metric.h"
 #endif
@@ -53,10 +57,17 @@
 
 Map::~Map()
 {
+#ifdef BUILD_ELUNA
+    sEluna->OnDestroy(this);
+#endif
     UnloadAll(true);
 
     if (m_persistentState)
         m_persistentState->SetUsedByMapState(nullptr);         // field pointer can be deleted after this
+#ifdef BUILD_ELUNA
+    if (Instanceable())
+        sEluna->FreeInstanceId(GetInstanceId());
+#endif
 
     delete i_data;
     i_data = nullptr;
@@ -166,6 +177,9 @@ Map::Map(uint32 id, time_t expiry, uint32 InstanceId)
       m_variableManager(this)
 {
     m_weatherSystem = new WeatherSystem(this);
+#ifdef BUILD_ELUNA
+    sEluna->OnCreate(this);
+#endif
 }
 
 void Map::Initialize(bool loadInstanceData /*= true*/)
@@ -442,6 +456,11 @@ bool Map::Add(Player* player)
     NGridType* grid = getNGrid(cell.GridX(), cell.GridY());
     player->GetViewPoint().Event_AddedToWorld(&(*grid)(cell.CellX(), cell.CellY()));
     UpdateObjectVisibility(player, cell, p);
+
+#ifdef BUILD_ELUNA
+    sEluna->OnMapChanged(player);
+    sEluna->OnPlayerEnter(this, player);
+#endif
 
     if (i_data)
         i_data->OnPlayerEnter(player);
@@ -1006,6 +1025,10 @@ void Map::Update(const uint32& t_diff)
     if (!m_scriptSchedule.empty())
         ScriptsProcess();
 
+#ifdef BUILD_ELUNA
+    sEluna->OnUpdate(this, t_diff);
+#endif
+
     if (i_data)
         i_data->Update(t_diff);
 
@@ -1014,6 +1037,9 @@ void Map::Update(const uint32& t_diff)
 
 void Map::Remove(Player* player, bool remove)
 {
+#ifdef BUILD_ELUNA
+    sEluna->OnPlayerLeave(this, player);
+#endif
     if (i_data)
         i_data->OnPlayerLeave(player);
 
@@ -1445,6 +1471,12 @@ void Map::AddObjectToRemoveList(WorldObject* obj)
 {
     MANGOS_ASSERT(obj->GetMapId() == GetId() && obj->GetInstanceId() == GetInstanceId());
 
+#ifdef BUILD_ELUNA
+    if (Creature* creature = obj->ToCreature())
+        sEluna->OnRemove(creature);
+    else if (GameObject* gameobject = obj->ToGameObject())
+        sEluna->OnRemove(gameobject);
+#endif
     obj->CleanupsBeforeDelete();                            // remove or simplify at least cross referenced links
 
     i_objectsToRemove.insert(obj);
@@ -1643,7 +1675,30 @@ void Map::CreateInstanceData(bool load)
 {
     if (i_data != nullptr)
         return;
+#ifdef BUILD_ELUNA
+    i_data = sEluna->GetInstanceData(this);
 
+    if (!i_data)
+    {
+        if (Instanceable())
+        {
+            if (InstanceTemplate const* mInstance = ObjectMgr::GetInstanceTemplate(GetId()))
+                i_script_id = mInstance->script_id;
+        }
+        else
+        {
+            if (WorldTemplate const* mInstance = ObjectMgr::GetWorldTemplate(GetId()))
+                i_script_id = mInstance->script_id;
+        }
+
+        if (!i_script_id)
+            return;
+
+        i_data = sScriptDevAIMgr.CreateInstanceData(this);
+        if (!i_data)
+            return;
+    }
+#else
     if (Instanceable())
     {
         if (InstanceTemplate const* mInstance = ObjectMgr::GetInstanceTemplate(GetId()))
@@ -1661,6 +1716,7 @@ void Map::CreateInstanceData(bool load)
     i_data = sScriptDevAIMgr.CreateInstanceData(this);
     if (!i_data)
         return;
+#endif    
 
     if (load)
     {

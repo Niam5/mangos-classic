@@ -52,6 +52,9 @@
 #include "Loot/LootMgr.h"
 #include "Movement/MoveSpline.h"
 #include "Entities/Transports.h"
+#ifdef BUILD_ELUNA
+#include "LuaEngine/LuaEngine.h"
+#endif
 
 pEffect SpellEffects[MAX_SPELL_EFFECTS] =
 {
@@ -4501,6 +4504,11 @@ void Spell::EffectDuel(SpellEffectIndex eff_idx)
 
     caster->SetGuidValue(PLAYER_DUEL_ARBITER, pGameObj->GetObjectGuid());
     target->SetGuidValue(PLAYER_DUEL_ARBITER, pGameObj->GetObjectGuid());
+
+#ifdef BUILD_ELUNA
+    // used by eluna
+    sEluna->OnDuelRequest(target, caster);
+#endif
 }
 
 void Spell::EffectStuck(SpellEffectIndex /*eff_idx*/)

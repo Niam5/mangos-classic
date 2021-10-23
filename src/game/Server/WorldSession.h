@@ -388,6 +388,7 @@ class WorldSession
         void SendPetitionShowList(ObjectGuid guid) const;
         void SendSaveGuildEmblem(uint32 msg) const;
         void SendBattleGroundJoinError(uint8 err) const;
+        void SendGuildInvite(Player* player);
 
         static void BuildPartyMemberStatsChangedPacket(Player* player, WorldPacket& data);
 

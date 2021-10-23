@@ -34,6 +34,9 @@
 #include "Tools/Formulas.h"
 #include "Grids/GridNotifiersImpl.h"
 #include "Chat/Chat.h"
+#ifdef BUILD_ELUNA
+#include "LuaEngine/LuaEngine.h"
+#endif
 
 #include <cstdarg>
 
@@ -696,6 +699,10 @@ void BattleGround::UpdateWorldStateForPlayer(uint32 field, uint32 value, Player*
 */
 void BattleGround::EndBattleGround(Team winner)
 {
+#ifdef BUILD_ELUNA
+    sEluna->OnBGEnd(this, GetTypeId(), GetInstanceId(), winner);
+#endif
+
     this->RemovedFromBgFreeSlotQueue(true);
 
     uint32 loser_rating = 0;
@@ -1200,6 +1207,10 @@ void BattleGround::StartBattleGround()
     // This must be done here, because we need to have already invited some players when first BG::Update() method is executed
     // and it doesn't matter if we call StartBattleGround() more times, because m_BattleGrounds is a map and instance id never changes
     sBattleGroundMgr.AddBattleGround(GetInstanceId(), GetTypeId(), this);
+
+#ifdef BUILD_ELUNA
+    sEluna->OnBGStart(this, GetTypeId(), GetInstanceId());
+#endif
 }
 
 /**

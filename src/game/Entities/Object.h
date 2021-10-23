@@ -111,6 +111,9 @@ struct ItemPrototype;
 class ChatHandler;
 struct SpellEntry;
 class GenericTransport;
+#ifdef BUILD_ELUNA
+class ElunaEventProcessor;
+#endif
 
 typedef std::unordered_map<Player*, UpdateData> UpdateDataMapType;
 
@@ -454,8 +457,28 @@ class Object
 
         ObjectGuid const& GetGuidValue(uint16 index) const { return *reinterpret_cast<ObjectGuid const*>(&GetUInt64Value(index)); }
 
+        Player* ToPlayer() { if (GetTypeId() == TYPEID_PLAYER) return reinterpret_cast<Player*>(this); else return NULL; }
+        Player const* ToPlayer() const { if (GetTypeId() == TYPEID_PLAYER) return reinterpret_cast<Player const*>(this); else return NULL; }
+
+        Creature* ToCreature() { if (GetTypeId() == TYPEID_UNIT) return reinterpret_cast<Creature*>(this); else return NULL; }
+        Creature const* ToCreature() const { if (GetTypeId() == TYPEID_UNIT) return reinterpret_cast<Creature const*>(this); else return NULL; }
+
+        Unit* ToUnit() { if (isType(TYPEMASK_UNIT)) return reinterpret_cast<Unit*>(this); else return NULL; }
+        Unit const* ToUnit() const { if (isType(TYPEMASK_UNIT)) return reinterpret_cast<Unit const*>(this); else return NULL; }
+
+        GameObject* ToGameObject() { if (GetTypeId() == TYPEID_GAMEOBJECT) return reinterpret_cast<GameObject*>(this); else return NULL; }
+        GameObject const* ToGameObject() const { if (GetTypeId() == TYPEID_GAMEOBJECT) return reinterpret_cast<GameObject const*>(this); else return NULL; }
+
+        Corpse* ToCorpse() { if (GetTypeId() == TYPEID_CORPSE) return reinterpret_cast<Corpse*>(this); else return NULL; }
+        Corpse const* ToCorpse() const { if (GetTypeId() == TYPEID_CORPSE) return reinterpret_cast<Corpse const*>(this); else return NULL; }
+
+        DynamicObject* ToDynObject() { if (GetTypeId() == TYPEID_DYNAMICOBJECT) return reinterpret_cast<DynamicObject*>(this); else return NULL; }
+        DynamicObject const* ToDynObject() const { if (GetTypeId() == TYPEID_DYNAMICOBJECT) return reinterpret_cast<DynamicObject const*>(this); else return NULL; }
+
+
         void SetInt32Value(uint16 index,        int32  value);
         void SetUInt32Value(uint16 index,       uint32  value);
+        void UpdateUInt32Value(uint16 index, uint32  value);
         void SetUInt64Value(uint16 index, const uint64& value);
         void SetFloatValue(uint16 index,       float   value);
         void SetByteValue(uint16 index, uint8 offset, uint8 value);
@@ -870,9 +893,13 @@ class WorldObject : public Object
         friend struct WorldObjectChangeAccumulator;
 
     public:
+#ifdef BUILD_ELUNA
+        virtual ~WorldObject();
+        virtual void Update(uint32 update_diff);
+#else
         virtual ~WorldObject() {}
-
         virtual void Update(const uint32 /*diff*/);
+#endif
         virtual void Heartbeat() {}
         virtual uint32 GetHeartbeatDuration() const { return 5000; }
 
@@ -980,6 +1007,7 @@ class WorldObject : public Object
 
         float GetDistance(const WorldObject* obj, bool is3D = true, DistanceCalculation distcalc = DIST_CALC_BOUNDING_RADIUS) const;
         float GetDistance(float x, float y, float z, DistanceCalculation distcalc = DIST_CALC_BOUNDING_RADIUS, bool transport = false) const;
+        float GetDistance2d(const WorldObject* obj) const;
         float GetDistance2d(float x, float y, DistanceCalculation distcalc = DIST_CALC_BOUNDING_RADIUS) const;
         float GetDistanceZ(const WorldObject* obj) const;
         bool IsInMap(const WorldObject* obj) const
@@ -1088,6 +1116,7 @@ class WorldObject : public Object
         static Creature* SummonCreature(TempSpawnSettings settings, Map* map);
         Creature* SummonCreature(uint32 id, float x, float y, float z, float ang, TempSpawnType spwtype, uint32 despwtime, bool asActiveObject = false, bool setRun = false, uint32 pathId = 0, uint32 faction = 0, uint32 modelId = 0, bool spawnCounting = false, bool forcedOnTop = false);
 
+        GameObject* SummonGameObject(uint32 id, float x, float y, float z, float angle, uint32 despwtime);
         static GameObject* SpawnGameObject(uint32 dbGuid, Map* map, uint32 forcedEntry = 0);
         static Creature* SpawnCreature(uint32 dbGuid, Map* map, uint32 forcedEntry = 0);
 
@@ -1169,6 +1198,9 @@ class WorldObject : public Object
 
         // Spell mod owner: static player whose spell mods apply to this unit (server-side)
         virtual Player* GetSpellModOwner() const { return nullptr; }
+#ifdef BUILD_ELUNA
+        ElunaEventProcessor* elunaEvents;
+#endif
 
         void AddStringId(std::string& stringId);
         void RemoveStringId(std::string& stringId);

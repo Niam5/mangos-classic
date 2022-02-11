@@ -53,6 +53,10 @@ else()
 add_definitions(-DBUILD_ELUNA -DCMANGOS -DCLASSIC)
 endif()
 
+if(BUILD_SOLOCRAFT)
+add_definitions(-DBUILD_SOLOCRAFT)
+endif()
+
 if(NOT BUILD_PLAYERBOT)
   # exclude Playerbot folder
   set (EXCLUDE_DIR "PlayerBot/")

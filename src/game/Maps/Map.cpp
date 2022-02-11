@@ -462,6 +462,93 @@ bool Map::Add(Player* player)
     sEluna->OnPlayerEnter(this, player);
 #endif
 
+#ifdef BUILD_SOLOCRAFT
+    if (sWorld.getConfig(CONFIG_BOOL_SOLOCRAFT_ENABLED))
+    {
+        //Get Config Values
+        //Balancing
+        SoloCraftDebuffEnable = sWorld.getConfig(CONFIG_BOOL_SOLOCRAFT_DEBUFF_ENABLE);
+        SoloCraftSpellMult = sWorld.getConfig(CONFIG_FLOAT_SOLOCRAFT_SPELLPOWER_MULT);
+        SoloCraftStatsMult = sWorld.getConfig(CONFIG_FLOAT_SOLOCRAFT_STATS_MULT);
+        //Level Thresholds
+        SolocraftLevelDiff = sWorld.getConfig(CONFIG_UINT32_SOLOCRAFT_MAX_LEVEL_DIFF);
+        //Default Value
+        SolocraftDungeonLevel = sWorld.getConfig(CONFIG_UINT32_DUNGEON_LEVEL);
+        //Dungeon Level
+        dungeons =
+        {
+            //Classic Instances
+            {33, sWorld.getConfig(CONFIG_UINT32_SHADOWFANGKEEP_LEVEL) },
+            {34, sWorld.getConfig(CONFIG_UINT32_STOCKADES_LEVEL) },
+            {36, sWorld.getConfig(CONFIG_UINT32_DEADMINES_LEVEL) },
+            {43, sWorld.getConfig(CONFIG_UINT32_WAILINGCAVERNS_LEVEL) },
+            {47, sWorld.getConfig(CONFIG_UINT32_RAZORFENKRAULINSTANCE_LEVEL) },
+            {48, sWorld.getConfig(CONFIG_UINT32_BLACKFATHOM_LEVEL) },
+            {70, sWorld.getConfig(CONFIG_UINT32_ULDAMAN_LEVEL) },
+            {90, sWorld.getConfig(CONFIG_UINT32_GNOMERAGONINSTANCE_LEVEL) },
+            {109, sWorld.getConfig(CONFIG_UINT32_SUNKENTEMPLE_LEVEL) },
+            {129, sWorld.getConfig(CONFIG_UINT32_RAZORFENDOWNS_LEVEL) },
+            {189, sWorld.getConfig(CONFIG_UINT32_MONASTERYINSTANCES_LEVEL) },                  // Scarlet Monastery
+            {209, sWorld.getConfig(CONFIG_UINT32_TANARISINSTANCE_LEVEL) },                     // Zul'Farrak
+            {229, sWorld.getConfig(CONFIG_UINT32_BLACKROCKSPIRE_LEVEL) },
+            {230, sWorld.getConfig(CONFIG_UINT32_BLACKROCKDEPTHS_LEVEL) },
+            {249, sWorld.getConfig(CONFIG_UINT32_ONYXIALAIRINSTANCE_LEVEL) },
+            {289, sWorld.getConfig(CONFIG_UINT32_SCHOOLOFNECROMANCY_LEVEL) },                  // Scholomance
+            {309, sWorld.getConfig(CONFIG_UINT32_ZULGURUB_LEVEL) },
+            {329, sWorld.getConfig(CONFIG_UINT32_STRATHOLME_LEVEL) },
+            {349, sWorld.getConfig(CONFIG_UINT32_MAURADON_LEVEL) },
+            {389, sWorld.getConfig(CONFIG_UINT32_ORGRIMMARINSTANCE_LEVEL) },                   // Ragefire Chasm
+            {409, sWorld.getConfig(CONFIG_UINT32_MOLTENCORE_LEVEL) },
+            {429, sWorld.getConfig(CONFIG_UINT32_DIREMAUL_LEVEL) },
+            {469, sWorld.getConfig(CONFIG_UINT32_BLACKWINGLAIR_LEVEL) },
+            {509, sWorld.getConfig(CONFIG_UINT32_AHNQIRAJ_LEVEL) },                            // Ruins of Ahn'Qiraj
+            {531, sWorld.getConfig(CONFIG_UINT32_AHNQIRAJTEMPLE_LEVEL) },
+            {533, sWorld.getConfig(CONFIG_UINT32_STRATHOLMERAID_LEVEL) },
+        };
+        // Dungeon Difficulty
+        // Catch alls
+        D5 = sWorld.getConfig(CONFIG_FLOAT_DUNGEON_DIFF);
+        D25 = sWorld.getConfig(CONFIG_FLOAT_RAID25_DIFF);
+        D40 = sWorld.getConfig(CONFIG_FLOAT_RAID40_DIFF);
+        diff_Multiplier =
+        {
+            // WOW Classic Instances
+            {33, sWorld.getConfig(CONFIG_FLOAT_SHADOWFANGKEEP_DIFF) },
+            {34, sWorld.getConfig(CONFIG_FLOAT_STOCKADES_DIFF) },
+            {36, sWorld.getConfig(CONFIG_FLOAT_DEADMINES_DIFF) },
+            {43, sWorld.getConfig(CONFIG_FLOAT_WAILINGCAVERNS_DIFF) },
+            {47, sWorld.getConfig(CONFIG_FLOAT_RAZORFENKRAULINSTANCE_DIFF) },
+            {48, sWorld.getConfig(CONFIG_FLOAT_BLACKFATHOM_DIFF) },
+            {70, sWorld.getConfig(CONFIG_FLOAT_ULDAMAN_DIFF) },
+            {90, sWorld.getConfig(CONFIG_FLOAT_GNOMERAGONINSTANCE_DIFF) },
+            {109, sWorld.getConfig(CONFIG_FLOAT_SUNKENTEMPLE_DIFF) },
+            {129, sWorld.getConfig(CONFIG_FLOAT_RAZORFENDOWNS_DIFF) },
+            {189, sWorld.getConfig(CONFIG_FLOAT_MONASTERYINSTANCES_DIFF) },                     // Scarlet
+            {209, sWorld.getConfig(CONFIG_FLOAT_TANARISINSTANCE_DIFF) },                        // Zul'Farrak
+            {229, sWorld.getConfig(CONFIG_FLOAT_BLACKROCKSPIRE_DIFF) },
+            {230, sWorld.getConfig(CONFIG_FLOAT_BLACKROCKDEPTHS_DIFF) },
+            {249, sWorld.getConfig(CONFIG_FLOAT_ONYXIALAIRINSTANCE_DIFF) },
+            {289, sWorld.getConfig(CONFIG_FLOAT_SCHOOLOFNECROMANCY_DIFF) },                     // Scholo
+            {309, sWorld.getConfig(CONFIG_FLOAT_ZULGURUB_DIFF) },
+            {329, sWorld.getConfig(CONFIG_FLOAT_STRATHOLME_DIFF) },
+            {349, sWorld.getConfig(CONFIG_FLOAT_MAURADON_DIFF) },
+            {389, sWorld.getConfig(CONFIG_FLOAT_ORGRIMMARINSTANCE_DIFF) },                      // Ragefire
+            {409, sWorld.getConfig(CONFIG_FLOAT_MOLTENCORE_DIFF) },
+            {429, sWorld.getConfig(CONFIG_FLOAT_DIREMAUL_DIFF) },
+            {469, sWorld.getConfig(CONFIG_FLOAT_BLACKWINGLAIR_DIFF) },
+            {509, sWorld.getConfig(CONFIG_FLOAT_AHNQIRAJ_DIFF) },
+            {531, sWorld.getConfig(CONFIG_FLOAT_AHNQIRAJTEMPLE_DIFF) },
+            {533, sWorld.getConfig(CONFIG_FLOAT_STRATHOLMERAID_DIFF) },
+        };
+
+        Map* map = player->GetMap();
+        float difficulty = CalculateDifficulty(map, player);
+        int dunLevel = CalculateDungeonLevel(map, player);
+        int numInGroup = GetNumInGroup(player);
+        ApplyBuffs(player, map, difficulty, dunLevel, numInGroup);
+    }
+#endif
+
     if (i_data)
         i_data->OnPlayerEnter(player);
 
@@ -3037,3 +3124,203 @@ void Map::RemoveFromSpawnCount(const ObjectGuid& guid)
 {
     m_spawnedCount[guid.GetEntry()].erase(guid);
 }
+
+#ifdef BUILD_SOLOCRAFT
+//Set the instance difficulty
+int Map::CalculateDifficulty(Map* map, Player* /*player*/)
+{
+    //float difficulty = 0.0;//changed from 1.0
+    if (map)
+    {
+        if (diff_Multiplier.find(map->GetId()) == diff_Multiplier.end()) {
+            //Catch Alls  ----------------------5 Dungeons and 40 Raids
+            if (map->IsRaid()) {
+                return D40;
+            }
+            else if (map->IsDungeon()) {
+                return D5;
+            }
+        }
+        else
+            return diff_Multiplier[map->GetId()]; //return the specific dungeon's level
+    }
+    return 0; //return 0
+}
+
+//Set the Dungeon Level
+int Map::CalculateDungeonLevel(Map* map, Player* /*player*/)
+{
+    if (dungeons.find(map->GetId()) == dungeons.end())
+    {
+        return SolocraftDungeonLevel; //map not found returns the catch all value
+    }
+    else
+        return dungeons[map->GetId()]; //return the specific dungeon's level
+}
+
+//Get the group's size
+int Map::GetNumInGroup(Player* player)
+{
+    int numInGroup = 1;
+    Group* group = player->GetGroup();
+    if (group) {
+        Group::MemberSlotList const& groupMembers = group->GetMemberSlots();
+        numInGroup = groupMembers.size();
+    }
+    return numInGroup;
+}
+
+void Map::ApplyBuffs(Player* player, Map* map, float difficulty, int dunLevel, int numInGroup)
+{
+    int SpellPowerBonus = 0;
+    //Check whether to buff the player or check to debuff back to normal
+    if (difficulty != 0)
+    {
+        std::ostringstream ss;
+        if (player->GetLevel() <= dunLevel + SolocraftLevelDiff) //If a player is too high level for dungeon don't buff but if in a group will count towards the group offset balancing.
+        {
+            //Get Current members total difficulty offset and if it exceeds the difficulty offset of the dungeon then debuff new group members coming in until all members leave and re-enter. This happens when a player already inside dungeon invite others to the group but the player already has the full difficulty offset.
+            float GroupDifficulty = GetGroupDifficulty(player);
+            //Check to either debuff or buff player entering dungeon.  Debuff must be enabled in Config
+            if (GroupDifficulty >= difficulty && SoloCraftDebuffEnable == 1)
+            {
+                //Current dungeon offset exceeded - Debuff player
+                difficulty = (-abs(difficulty)) + (difficulty / numInGroup);
+                difficulty = roundf(difficulty * 100) / 100; //Float variables suck
+
+                //sLog->outError("%u: would have this difficulty: %f", player->GetGUID(), tempDiff);
+            }
+            else
+            {
+                //Current Dungeon offset not exceeded - Buff player
+                //Group difficulty adjustment
+                difficulty = difficulty / numInGroup;
+                difficulty = roundf(difficulty * 100) / 100; //Float variables suck - two decimal rounding
+            }
+
+            //Check Database for a current dungeon entry
+            auto queryResult = CharacterDatabase.PQuery("SELECT `GUID`, `Difficulty`, `GroupSize`, `SpellPower`, `Stats` FROM `custom_solocraft_character_stats` WHERE GUID = %u", player->GetGUIDLow());
+
+            //Modify Player Stats
+            for (int32 i = STAT_STRENGTH; i < MAX_STATS; ++i) //STATS defined/enum in SharedDefines.h
+            {
+                if (queryResult)
+                {
+                    player->HandleStatModifier(UnitMods(UNIT_MOD_STAT_START + i), TOTAL_VALUE, (*queryResult)[1].GetFloat() * (*queryResult)[4].GetFloat(), false);
+                }
+                // Buff the player
+                player->HandleStatModifier(UnitMods(UNIT_MOD_STAT_START + i), TOTAL_VALUE, difficulty * SoloCraftStatsMult, true); //Unitmods enum UNIT_MOD_STAT_START defined in Unit.h line 391
+            }
+            // Set player health
+            player->SetFullHealth();//defined in Unit.h line 1524
+            //Spellcaster Stat modify
+            if (player->GetPowerType() == POWER_MANA)
+            {
+                // Buff the player's mana
+                player->SetPower(POWER_MANA, player->GetMaxPower(POWER_MANA));
+
+                //Check for Dungeon to Dungeon Transfer and remove old Spellpower buff
+                if (queryResult)
+                {
+                    // remove spellpower bonus
+                    player->ApplySpellPowerBonus((*queryResult)[3].GetUInt32() * (*queryResult)[4].GetFloat(), false);
+                }
+
+                //Buff Spellpower
+                if (difficulty > 0) //Debuffed characters do not get spellpower
+                {
+                    SpellPowerBonus = static_cast<int>((player->GetLevel() * SoloCraftSpellMult) * difficulty);//Yes, I pulled this calc out of my butt.
+                    player->ApplySpellPowerBonus(SpellPowerBonus, true);
+                    //sLog->outError("%u: spellpower Bonus applied: %i", player->GetGUID(), SpellPowerBonus);
+                }
+            }
+            //Announcements
+            if (difficulty > 0)
+            {
+                // Announce to player - Buff
+                ss << "|cffFF0000[SoloCraft] |cffFF8000" << player->GetName() << " entered %s  - Difficulty Offset: %0.2f. Spellpower Bonus: %i";
+                ChatHandler(player->GetSession()).PSendSysMessage(ss.str().c_str(), map->GetMapName(), difficulty, SpellPowerBonus);
+            }
+            else
+            {
+                // Announce to player - Debuff
+                ss << "|cffFF0000[SoloCraft] |cffFF8000" << player->GetName() << " entered %s  - |cffFF0000BE ADVISED - You have been debuffed by offset: %0.2f. |cffFF8000 A group member already inside has the dungeon's full buff offset.  No Spellpower buff will be applied to spell casters.  ALL group members must exit the dungeon and re-enter to receive a balanced offset.";
+                ChatHandler(player->GetSession()).PSendSysMessage(ss.str().c_str(), map->GetMapName(), difficulty);
+            }
+            // Save Player Dungeon Offsets to Database
+            CharacterDatabase.PExecute("REPLACE INTO custom_solocraft_character_stats (GUID, Difficulty, GroupSize, SpellPower, Stats) VALUES (%u, %f, %u, %i, %f)", player->GetGUIDLow(), difficulty, numInGroup, SpellPowerBonus, SoloCraftStatsMult);
+        }
+        else
+        {
+            // Announce to player - Over Max Level Threshold
+            ss << "|cffFF0000[SoloCraft] |cffFF8000" << player->GetName() << " entered %s  - |cffFF0000You have not been buffed. |cffFF8000 Your level is higher than the max level (%i) threshold for this dungeon.";
+            ChatHandler(player->GetSession()).PSendSysMessage(ss.str().c_str(), map->GetMapName(), dunLevel + SolocraftLevelDiff);
+            ClearBuffs(player, map); //Check to revert player back to normal
+        }
+
+    }
+    else
+    {
+        ClearBuffs(player, map); //Check to revert player back to normal - Moving this here fixed logout and login while in instance buff and debuff issues
+    }
+}
+
+// Get the current group members GUIDS and return the total sum of the difficulty offset by all group members currently in the dungeon
+float Map::GetGroupDifficulty(Player* player)
+{
+    float GroupDifficulty = 0.0;
+    Group* group = player->GetGroup();
+    if (group)
+    {
+        Group::MemberSlotList const& groupMembers = group->GetMemberSlots();
+        for (Group::member_citerator itr = groupMembers.begin(); itr != groupMembers.end(); ++itr)
+        {
+            //Exclude player from the tally because the player is the one entering the dungeon
+            if (itr->guid != player->GetGUIDLow())
+            {
+                //Database query to find difficulty for each group member that is currently in an instance
+                auto queryResult = CharacterDatabase.PQuery("SELECT `GUID`, `Difficulty`, `GroupSize` FROM `custom_solocraft_character_stats` WHERE GUID = %u", itr->guid);
+                if (queryResult)
+                {
+                    //Test for debuffs already give to other members - They cannot be used to determine the total offset because negative numbers will skew the total difficulty offset
+                    if ((*queryResult)[1].GetFloat() > 0)
+                    {
+                        GroupDifficulty = GroupDifficulty + (*queryResult)[1].GetFloat();
+                        //sLog->outError("%u : Group member GUID in instance: %u", player->GetGUID(), itr->guid);
+                    }
+                }
+            }
+        }
+    }
+    return GroupDifficulty;
+}
+
+void Map::ClearBuffs(Player* player, Map* map)
+{
+    //Database query to get offset from the last instance player exited
+    auto queryResult = CharacterDatabase.PQuery("SELECT `GUID`, `Difficulty`, `GroupSize`, `SpellPower`, `Stats` FROM `custom_solocraft_character_stats` WHERE GUID = %u", player->GetGUIDLow());
+    if (queryResult)
+    {
+        float difficulty = (*queryResult)[1].GetFloat();
+        int SpellPowerBonus = (*queryResult)[3].GetUInt32();
+        float StatsMultPct = (*queryResult)[4].GetFloat();
+        //sLog->outError("Map difficulty: %f", difficulty);
+        // Inform the player
+        std::ostringstream ss;
+        ss << "|cffFF0000[SoloCraft] |cffFF8000" << player->GetName() << " exited to %s - Reverting Difficulty Offset: %0.2f. Spellpower Bonus Removed: %i";
+        ChatHandler(player->GetSession()).PSendSysMessage(ss.str().c_str(), map->GetMapName(), difficulty, SpellPowerBonus);
+        // Clear the buffs
+        for (int32 i = STAT_STRENGTH; i < MAX_STATS; ++i)
+        {
+            player->HandleStatModifier(UnitMods(UNIT_MOD_STAT_START + i), TOTAL_VALUE, difficulty * StatsMultPct, false);
+        }
+        if (player->GetPowerType() == POWER_MANA && difficulty > 0)
+        {
+            // remove spellpower bonus
+            player->ApplySpellPowerBonus(SpellPowerBonus, false);
+        }
+        //Remove database entry as the player is no longer in an instance
+        CharacterDatabase.PExecute("DELETE FROM custom_solocraft_character_stats WHERE GUID = %u", player->GetGUIDLow());
+    }
+}
+#endif

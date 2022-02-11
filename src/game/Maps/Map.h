@@ -373,6 +373,27 @@ class Map : public GridRefManager<NGridType>
         // debug
         std::set<ObjectGuid> m_objRemoveList; // this will eventually eat up too much memory - only used for debugging VisibleNotifier::Notify() customlog leak
 
+#ifdef BUILD_SOLOCRAFT
+        bool SoloCraftDebuffEnable = 1;
+        float SoloCraftSpellMult = 1.0;
+        float SoloCraftStatsMult = 100.0;
+        uint32 SolocraftLevelDiff = 1;
+        std::map<uint32, float> _unitDifficulty;
+        std::unordered_map<uint32, uint32> dungeons;
+        std::unordered_map<uint32, float> diff_Multiplier;
+        uint32 SolocraftDungeonLevel = 1;
+        float D5 = 1.0;
+        float D25 = 1.0;
+        float D40 = 1.0;
+
+        int CalculateDifficulty(Map* map, Player* /*player*/);
+        int CalculateDungeonLevel(Map* map, Player* /*player*/);
+        int GetNumInGroup(Player* player);
+        void ApplyBuffs(Player* player, Map* map, float difficulty, int dunLevel, int numInGroup);
+        float GetGroupDifficulty(Player* player);
+        void ClearBuffs(Player* player, Map* map);
+#endif
+
     private:
         void LoadMapAndVMap(int gx, int gy);
 

@@ -1622,6 +1622,9 @@ class Player : public Unit
         void UpdateMaxPower(Powers power) override;
         void UpdateAttackPowerAndDamage(bool ranged = false) override;
         void UpdateDamagePhysical(WeaponAttackType attType) override;
+#ifdef BUILD_SOLOCRAFT
+        void ApplySpellPowerBonus(int32 amount, bool apply);
+#endif
         void UpdateSpellDamageBonus();
 
         void CalculateMinMaxDamage(WeaponAttackType attType, bool normalized, float& min_damage, float& max_damage, uint8 index = 0);
@@ -1630,6 +1633,9 @@ class Player : public Unit
         float GetMeleeCritFromAgility() const;
         float GetDodgeFromAgility(float amount) const;
         float GetSpellCritFromIntellect() const;
+#ifdef BUILD_SOLOCRAFT
+        uint32 GetBaseSpellPowerBonus() const { return m_baseSpellPower; }
+#endif
 
         void UpdateBlockPercentage();
         void UpdateCritPercentage(WeaponAttackType attType);
@@ -2397,6 +2403,10 @@ class Player : public Unit
         ActionButtonList m_actionButtons;
 
         float m_auraBaseMod[BASEMOD_END][MOD_END];
+
+#ifdef BUILD_SOLOCRAFT
+        uint16 m_baseSpellPower;
+#endif
 
         uint32 m_enchantmentFlatMod[MAX_ATTACK]; // TODO: Stat system - incorporate generically, exposes a required hidden weapon stat that does not apply when unarmed
 

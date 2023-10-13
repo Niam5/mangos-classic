@@ -58,6 +58,13 @@ foreach (TMP_PATH ${LIBRARY_SRCS})
         list(REMOVE_ITEM LIBRARY_SRCS ${TMP_PATH})
     endif ()
 endforeach()
+set (EXCLUDE_DIR "LuaEngine/VMangos/")
+foreach (TMP_PATH ${LIBRARY_SRCS})
+    string (FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
+    if (NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
+        list(REMOVE_ITEM LIBRARY_SRCS ${TMP_PATH})
+    endif ()
+endforeach()
 set (EXCLUDE_DIR "LuaEngine/TrinityCore/")
 foreach (TMP_PATH ${LIBRARY_SRCS})
     string (FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
@@ -152,11 +159,6 @@ endif()
 # Define BUILD_SCRIPTDEV if need
 if (BUILD_SCRIPTDEV)
   add_definitions(-DBUILD_SCRIPTDEV)
-endif()
-
-# Define BUILD_ELUNA if need
-if (BUILD_ELUNA)
-  add_definitions(-DBUILD_ELUNA)
 endif()
 
 # Define BUILD_AHBOT if need

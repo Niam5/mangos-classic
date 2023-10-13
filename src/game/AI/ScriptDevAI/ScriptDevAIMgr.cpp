@@ -473,7 +473,9 @@ bool ScriptDevAIMgr::OnItemLoot(Player* pPlayer, Item* pItem, bool apply)
 bool ScriptDevAIMgr::OnEffectDummy(Unit* pCaster, uint32 spellId, SpellEffectIndex effIndex, Creature* pTarget, ObjectGuid originalCasterGuid)
 {
     Script* pTempScript = GetScript(pTarget->GetScriptId());
-
+#ifdef BUILD_ELUNA
+    sEluna->OnDummyEffect(pCaster, spellId, effIndex, pTarget);
+#endif
     if (!pTempScript || !pTempScript->pEffectDummyNPC)
         return false;
 
@@ -483,7 +485,9 @@ bool ScriptDevAIMgr::OnEffectDummy(Unit* pCaster, uint32 spellId, SpellEffectInd
 bool ScriptDevAIMgr::OnEffectDummy(Unit* pCaster, uint32 spellId, SpellEffectIndex effIndex, GameObject* pTarget, ObjectGuid originalCasterGuid)
 {
     Script* pTempScript = GetScript(pTarget->GetGOInfo()->ScriptId);
-
+#ifdef BUILD_ELUNA
+    sEluna->OnDummyEffect(pCaster, spellId, effIndex, pTarget);
+#endif
     if (!pTempScript || !pTempScript->pEffectDummyGO)
         return false;
 
@@ -493,7 +497,9 @@ bool ScriptDevAIMgr::OnEffectDummy(Unit* pCaster, uint32 spellId, SpellEffectInd
 bool ScriptDevAIMgr::OnEffectDummy(Unit* pCaster, uint32 spellId, SpellEffectIndex effIndex, Item* pTarget, ObjectGuid originalCasterGuid)
 {
     Script* pTempScript = GetScript(pTarget->GetProto()->ScriptId);
-
+#ifdef BUILD_ELUNA
+    sEluna->OnDummyEffect(pCaster, spellId, effIndex, pTarget);
+#endif
     if (!pTempScript || !pTempScript->pEffectDummyItem)
         return false;
 

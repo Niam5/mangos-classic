@@ -5256,6 +5256,10 @@ bool Player::UpdateSkillPro(uint16 SkillId, int32 Chance, uint16 diff)
         if (skillStatus.uState != SKILL_NEW)
             skillStatus.uState = SKILL_CHANGED;
 
+#ifdef BUILD_ELUNA
+        sEluna->OnSkillChange(this, SkillId, new_value);
+#endif
+
         DEBUG_LOG("Player::UpdateSkillPro Chance=%3.1f%% taken", Chance / 10.0);
         return true;
     }

@@ -20,7 +20,7 @@ jobs:
           - COMPILER_CC: clang
             COMPILER_PP: clang++
             USE_PCH: ON
-            EXTRA_BUILD: "-DBUILD_AHBOT=ON -DBUILD_PLAYERBOT=ON -DBUILD_SOLOCRAFT=ON "
+            EXTRA_BUILD: "-DBUILD_AHBOT=ON -DBUILD_PLAYERBOT=ON -DBUILD_SOLOCRAFT=ON -DBUILD_EXTRACTORS=ON "
 
     steps:
     

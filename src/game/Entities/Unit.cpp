@@ -1166,6 +1166,15 @@ void Unit::Kill(Unit* killer, Unit* victim, DamageEffectType damagetype, SpellEn
     else                                                // Killed creature
         JustKilledCreature(killer, static_cast<Creature*>(victim), responsiblePlayer);
 
+#ifdef BUILD_ELUNA
+    if (Creature* killerCre = killer->ToCreature())
+    {
+        // used by eluna
+        if (Player* killed = victim->ToPlayer())
+            sEluna->OnPlayerKilledByCreature(killerCre, killed);
+    }
+#endif
+
     // stop combat
     DEBUG_FILTER_LOG(LOG_FILTER_DAMAGE, "DealDamageAttackStop");
     victim->CombatStop();

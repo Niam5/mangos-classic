@@ -41,6 +41,7 @@
 #include "AI/ScriptDevAI/ScriptDevAIMgr.h"
 #ifdef BUILD_ELUNA
 #include "LuaEngine/LuaEngine.h"
+#include "LuaEngine/ElunaConfig.h"
 #include "LuaEngine/ElunaLoader.h"
 #endif
 
@@ -176,16 +177,12 @@ Map::Map(uint32 id, time_t expiry, uint32 InstanceId)
 #ifdef BUILD_ELUNA
     // lua state begins uninitialized
     eluna = nullptr;
-    bool elunaEnabled = sWorld.getConfig(CONFIG_BOOL_ELUNA_ENABLED);
-    if (elunaEnabled)
-    {
-        bool compatMode = sWorld.getConfig(CONFIG_BOOL_ELUNA_COMPATIBILITY);
-        if (sElunaLoader->ShouldMapLoadEluna(id) && !compatMode)
-            eluna = new Eluna(this);
 
-        if (Eluna* e = GetEluna())
-            e->OnCreate(this);
-    }
+    if (sElunaConfig->IsElunaEnabled() && !sElunaConfig->IsElunaCompatibilityMode() && sElunaLoader->ShouldMapLoadEluna(id))
+        eluna = new Eluna(this);
+
+    if (Eluna* e = GetEluna())
+        e->OnCreate(this);
 #endif
 }
 
@@ -949,8 +946,7 @@ void Map::Update(const uint32& t_diff)
 #ifdef BUILD_ELUNA
     if (Eluna* e = GetEluna())
     {
-        bool compatMode = sWorld.getConfig(CONFIG_BOOL_ELUNA_COMPATIBILITY);
-        if (!compatMode)
+        if (!sElunaConfig->IsElunaCompatibilityMode())
             e->UpdateEluna(t_diff);
 
         e->OnUpdate(this, t_diff);
@@ -2961,8 +2957,7 @@ void Map::RemoveFromSpawnCount(const ObjectGuid& guid)
 #ifdef BUILD_ELUNA
 Eluna* Map::GetEluna() const
 {
-    bool compatMode = sWorld.getConfig(CONFIG_BOOL_ELUNA_COMPATIBILITY);
-    if (compatMode)
+    if (sElunaConfig->IsElunaCompatibilityMode())
         return sWorld.GetEluna();
 
     return eluna;

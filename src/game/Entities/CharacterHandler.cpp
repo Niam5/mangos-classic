@@ -398,7 +398,8 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recv_data)
     sLog.outChar("Account: %d (IP: %s) Create Character:[%s] (guid: %u)", GetAccountId(), IP_str.c_str(), name.c_str(), pNewChar->GetGUIDLow());
 
 #ifdef BUILD_ELUNA
-    sEluna->OnCreate(pNewChar);
+    if (Eluna* e = sWorld.GetEluna())
+        e->OnCreate(pNewChar);
 #endif
 
     delete pNewChar;                                        // created only to call SaveToDB()
@@ -444,7 +445,8 @@ void WorldSession::HandleCharDeleteOpcode(WorldPacket& recv_data)
     sLog.outChar("Account: %d (IP: %s) Delete Character:[%s] (guid: %u)", GetAccountId(), IP_str.c_str(), name.c_str(), lowguid);
 
 #ifdef BUILD_ELUNA
-    sEluna->OnDelete(lowguid);
+    if (Eluna* e = sWorld.GetEluna())
+        e->OnDelete(lowguid);
 #endif
 
     if (sLog.IsOutCharDump())                               // optimize GetPlayerDump call
@@ -770,7 +772,8 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder* holder)
 #ifdef BUILD_ELUNA
     // used by eluna
     if (pCurrChar->HasAtLoginFlag(AT_LOGIN_FIRST))
-        sEluna->OnFirstLogin(pCurrChar);
+        if (Eluna* e = sWorld.GetEluna())
+            e->OnFirstLogin(pCurrChar);
 #endif
 
     if (pCurrChar->HasAtLoginFlag(AT_LOGIN_FIRST))
@@ -805,7 +808,8 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder* holder)
 
 #ifdef BUILD_ELUNA
     // used by eluna
-    sEluna->OnLogin(pCurrChar);
+    if (Eluna* e = sWorld.GetEluna())
+        e->OnLogin(pCurrChar);
 #endif
 
 #ifdef BUILD_SOLOCRAFT

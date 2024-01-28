@@ -39,6 +39,9 @@
 #include "Maps/SpawnManager.h"
 #include "Maps/MapDataContainer.h"
 #include "World/WorldStateVariableManager.h"
+#ifdef BUILD_ELUNA
+#include "LuaEngine/LuaValue.h"
+#endif
 
 #include <bitset>
 #include <functional>
@@ -46,6 +49,9 @@
 
 struct CreatureInfo;
 class Creature;
+#ifdef BUILD_ELUNA
+class Eluna;
+#endif
 class Unit;
 class WorldPacket;
 class InstanceData;
@@ -373,6 +379,12 @@ class Map : public GridRefManager<NGridType>
         // debug
         std::set<ObjectGuid> m_objRemoveList; // this will eventually eat up too much memory - only used for debugging VisibleNotifier::Notify() customlog leak
 
+#ifdef BUILD_ELUNA
+        Eluna* GetEluna() const;
+
+        LuaVal lua_data = LuaVal({});
+#endif
+
 #ifdef BUILD_SOLOCRAFT
         bool SoloCraftDebuffEnable = 1;
         float SoloCraftSpellMult = 1.0;
@@ -520,6 +532,9 @@ class Map : public GridRefManager<NGridType>
         std::shared_ptr<CreatureSpellListContainer> m_spellListContainer;
 
         WorldStateVariableManager m_variableManager;
+#ifdef BUILD_ELUNA
+        Eluna* eluna;
+#endif
 };
 
 class WorldMap : public Map

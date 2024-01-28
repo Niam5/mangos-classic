@@ -346,7 +346,8 @@ void WorldSession::HandleGossipHelloOpcode(WorldPacket& recv_data)
         pCreature->SendAreaSpiritHealerQueryOpcode(_player);
 
 #ifdef BUILD_ELUNA
-    if (!sEluna->OnGossipHello(_player, pCreature))
+    if (Eluna* e = _player->GetEluna())
+        if (!e->OnGossipHello(_player, pCreature))
 #endif
 
     if (!sScriptDevAIMgr.OnGossipHello(_player, pCreature))
@@ -412,7 +413,8 @@ void WorldSession::HandleGossipSelectOptionOpcode(WorldPacket& recv_data)
         }
 
         // used by eluna
-        sEluna->HandleGossipSelectOption(GetPlayer(), item, GetPlayer()->GetPlayerMenu()->GossipOptionSender(gossipListId), GetPlayer()->GetPlayerMenu()->GossipOptionAction(gossipListId), code);
+        if (Eluna* e = GetPlayer()->GetEluna())
+            e->HandleGossipSelectOption(GetPlayer(), item, GetPlayer()->GetPlayerMenu()->GossipOptionSender(gossipListId), GetPlayer()->GetPlayerMenu()->GossipOptionAction(gossipListId), code);
     }
     else if (guid.IsPlayer())
     {
@@ -423,7 +425,8 @@ void WorldSession::HandleGossipSelectOptionOpcode(WorldPacket& recv_data)
         }
 
         // used by eluna
-        sEluna->HandleGossipSelectOption(GetPlayer(), nullptr, GetPlayer()->GetPlayerMenu()->GossipOptionSender(gossipListId), GetPlayer()->GetPlayerMenu()->GossipOptionAction(gossipListId), code);
+        if (Eluna* e = GetPlayer()->GetEluna())
+            e->HandleGossipSelectOption(GetPlayer(), nullptr, GetPlayer()->GetPlayerMenu()->GossipOptionSender(gossipListId), GetPlayer()->GetPlayerMenu()->GossipOptionAction(gossipListId), code);
     }
 #endif
 }

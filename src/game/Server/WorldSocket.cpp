@@ -185,13 +185,6 @@ bool WorldSocket::ProcessIncomingData()
 
         const Opcodes opcode = static_cast<Opcodes>(header->cmd);
 
-#ifdef BUILD_ELUNA
-                if (!sEluna->OnPacketReceive(m_session, *pct))
-                {
-                    return 0;
-                }
-#endif
-
         size_t packetSize = header->size - 4;
         std::shared_ptr<std::vector<uint8>> packetBuffer = std::make_shared<std::vector<uint8>>(packetSize);
 
@@ -209,10 +202,6 @@ bool WorldSocket::ProcessIncomingData()
                 sPacketLog->LogPacket(*pct, CLIENT_TO_SERVER, self->GetRemoteIpAddress(), self->GetRemotePort());
 
             sLog.outWorldPacketDump(self->GetRemoteEndpoint().c_str(), pct->GetOpcode(), pct->GetOpcodeName(), *pct, true);
-
-#ifdef BUILD_ELUNA
-                sEluna->OnPacketReceive(m_session, *pct);
-#endif
 
             if (WorldSocket::m_packetCooldowns.size() <= size_t(opcode))
             {
@@ -244,7 +233,12 @@ bool WorldSocket::ProcessIncomingData()
                             self->Close();
                             return;
                         }
-
+#ifdef BUILD_ELUNA
+                        if (!sWorld.GetEluna()->OnPacketReceive(self->m_session, *pct))
+                        {
+                            return;
+                        }
+#endif
                         if (!self->HandleAuthSession(*pct))
                         {
                             self->Close();

@@ -146,7 +146,8 @@ bool Group::Create(ObjectGuid guid, const char* name)
 
     _updateLeaderFlag();
 #ifdef BUILD_ELUNA
-    sEluna->OnCreate(this, m_leaderGuid, m_groupFlags);
+    if (Eluna* e = sWorld.GetEluna())
+        e->OnCreate(this, m_leaderGuid, m_groupFlags);
 #endif
 
     return true;
@@ -245,7 +246,8 @@ bool Group::AddInvite(Player* player)
 
 #ifdef BUILD_ELUNA
     // used by eluna
-    sEluna->OnInviteMember(this, player->GetObjectGuid());
+    if (Eluna* e = sWorld.GetEluna())
+        e->OnInviteMember(this, player->GetObjectGuid());
 #endif
 
     return true;
@@ -320,7 +322,8 @@ bool Group::AddMember(ObjectGuid guid, const char* name, uint8 joinMethod)
 
 #ifdef BUILD_ELUNA
         // used by eluna
-        sEluna->OnAddMember(this, player->GetObjectGuid());
+        if (Eluna* e = sWorld.GetEluna())
+            e->OnAddMember(this, player->GetObjectGuid());
 #endif
 
         // quest related GO state dependent from raid membership
@@ -502,7 +505,8 @@ uint32 Group::RemoveMember(ObjectGuid guid, uint8 method)
 
 #ifdef BUILD_ELUNA
     // used by eluna
-    sEluna->OnRemoveMember(this, guid, method);
+    if (Eluna* e = sWorld.GetEluna())
+        e->OnRemoveMember(this, guid, method);
 #endif
 
     return m_memberSlots.size();
@@ -516,7 +520,8 @@ void Group::ChangeLeader(ObjectGuid guid)
 
 #ifdef BUILD_ELUNA
     // used by eluna
-    sEluna->OnChangeLeader(this, guid, GetLeaderGuid());
+    if (Eluna* e = sWorld.GetEluna())
+        e->OnChangeLeader(this, guid, GetLeaderGuid());
 #endif
 
     _setLeader(guid);
@@ -603,7 +608,8 @@ void Group::Disband(bool hideDestroy)
 
     _updateLeaderFlag(true);
 #ifdef BUILD_ELUNA
-    sEluna->OnDisband(this);
+    if (Eluna* e = sWorld.GetEluna())
+        e->OnDisband(this);
 #endif
     m_leaderGuid.Clear();
     m_leaderName.clear();

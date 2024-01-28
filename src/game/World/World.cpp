@@ -71,6 +71,8 @@
 
 #ifdef BUILD_ELUNA
 #include "LuaEngine/LuaEngine.h"
+#include "LuaEngine/ElunaConfig.h"
+#include "LuaEngine/ElunaLoader.h"
 #endif
 
 #ifdef BUILD_AHBOT
@@ -151,6 +153,12 @@ World::World(): mail_timer(0), mail_timer_expires(0), m_NextWeeklyQuestReset(0),
 World::~World()
 {
     // it is assumed that no other thread is accessing this data when the destructor is called.  therefore, no locks are necessary
+
+    #ifdef BUILD_ELUNA
+    // Delete world Eluna state
+        delete eluna;
+        eluna = nullptr;
+    #endif
 
     ///- Empty the kicked session set
     for (auto const session : m_sessions)
@@ -841,9 +849,8 @@ void World::LoadConfigSettings(bool reload)
     setConfig(CONFIG_BOOL_PATH_FIND_NORMALIZE_Z, "PathFinder.NormalizeZ", false);
 
 #ifdef BUILD_ELUNA
-    setConfig(CONFIG_BOOL_ELUNA_ENABLED, "Eluna.Enabled", true);
-    if (reload)
-        sEluna->OnConfigLoad(reload);
+    if (Eluna* e = GetEluna())
+        e->OnConfigLoad(reload);
 #endif
 
 #ifdef BUILD_SOLOCRAFT
@@ -1034,9 +1041,15 @@ void World::SetInitialWorldSettings()
     sLog.outString();
 
 #ifdef BUILD_ELUNA
-    ///- Initialize Lua Engine
-    sLog.outString("Initialize Eluna Lua Engine...");
-    Eluna::Initialize();
+    sLog.outString("Loading Eluna config...");
+    sElunaConfig->Initialize();
+
+    if (sElunaConfig->IsElunaEnabled())
+    {
+        ///- Initialize Lua Engine
+        sLog.outString("Loading Lua scripts...");
+        sElunaLoader->LoadScripts();
+    }
 #endif
 
     sLog.outString("Loading Page Texts...");
@@ -1287,7 +1300,6 @@ void World::SetInitialWorldSettings()
 
     sLog.outString("Loading Npc Text Id...");
     sObjectMgr.LoadNpcGossips();                            // must be after load Creature and LoadGossipText
-
     sLog.outString("Loading Scripts random templates...");  // must be before String calls
     sScriptMgr.LoadDbScriptRandomTemplates();
     ///- Load and initialize DBScripts Engine
@@ -1528,11 +1540,19 @@ void World::SetInitialWorldSettings()
 #endif
 
 #ifdef BUILD_ELUNA
-    ///- Run eluna scripts.
-    // in multithread foreach: run scripts
-    sEluna->RunScripts();
-    sEluna->OnConfigLoad(false); // Must be done after Eluna is initialized and scripts have run
-    sLog.outString();
+    // lua state begins uninitialized
+    eluna = nullptr;
+
+    if (sElunaConfig->IsElunaEnabled())
+    {
+        ///- Run eluna scripts.
+        sLog.outString("Starting Eluna world state...");
+        // use map id -1 for the global Eluna state
+        eluna = new Eluna(nullptr, sElunaConfig->IsElunaCompatibilityMode());
+
+        eluna->OnConfigLoad(false); // Must be done after Eluna is initialized and scripts have run
+        sLog.outString();
+    }
 #endif
 
     sLog.outString("---------------------------------------");
@@ -1719,7 +1739,11 @@ void World::Update(uint32 diff)
 
 #ifdef BUILD_ELUNA
     ///- used by eluna
-    sEluna->OnWorldUpdate(diff);
+    if (Eluna* e = GetEluna())
+    {
+        e->UpdateEluna(diff);
+        e->OnWorldUpdate(diff);
+    }
 #endif
     ///- Update groups with offline leaders
     if (m_timers[WUPDATE_GROUPS].Passed())
@@ -2194,7 +2218,8 @@ void World::ShutdownServ(uint32 time, uint32 options, uint8 exitcode)
     }
 #ifdef BUILD_ELUNA
     ///- Used by Eluna
-    sEluna->OnShutdownInitiate(ShutdownExitCode(exitcode), ShutdownMask(options));
+    if (Eluna* e = GetEluna())
+        e->OnShutdownInitiate(ShutdownExitCode(exitcode), ShutdownMask(options));
 #endif
 }
 
@@ -2241,7 +2266,8 @@ void World::ShutdownCancel()
 
 #ifdef BUILD_ELUNA
     ///- Used by Eluna
-    sEluna->OnShutdownCancel();
+    if (Eluna* e = GetEluna())
+        e->OnShutdownCancel();
 #endif
 }
 

@@ -154,7 +154,8 @@ bool Guild::Create(Player* leader, std::string gname)
     CreateDefaultGuildRanks(lSession->GetSessionDbLocaleIndex());
 #ifdef BUILD_ELUNA
     // used by eluna
-    sEluna->OnCreate(this, leader, gname.c_str());
+    if (Eluna* e = sWorld.GetEluna())
+        e->OnCreate(this, leader, gname.c_str());
 #endif
     return AddMember(m_LeaderGuid, (uint32)GR_GUILDMASTER);
 }
@@ -251,7 +252,8 @@ bool Guild::AddMember(ObjectGuid plGuid, uint32 plRank)
 
 #ifdef BUILD_ELUNA
     // used by eluna
-    sEluna->OnAddMember(this, pl, newmember.RankId);
+    if (Eluna* e = sWorld.GetEluna())
+        e->OnAddMember(this, pl, newmember.RankId);
 #endif
 
     return true;
@@ -267,7 +269,8 @@ void Guild::SetMOTD(std::string motd)
 
 #ifdef BUILD_ELUNA
     // used by eluna
-    sEluna->OnMOTDChanged(this, motd);
+    if (Eluna* e = sWorld.GetEluna())
+        e->OnMOTDChanged(this, motd);
 #endif
 }
 
@@ -281,7 +284,8 @@ void Guild::SetGINFO(std::string ginfo)
 
 #ifdef BUILD_ELUNA
     // used by eluna
-    sEluna->OnInfoChanged(this, ginfo);
+    if (Eluna* e = sWorld.GetEluna())
+        e->OnInfoChanged(this, ginfo);
 #endif
 }
 
@@ -570,7 +574,8 @@ bool Guild::DelMember(ObjectGuid guid, bool isDisbanding)
         UpdateAccountsNumber();
 #ifdef BUILD_ELUNA
     // used by eluna
-    sEluna->OnRemoveMember(this, player, isDisbanding);
+    if (Eluna* e = sWorld.GetEluna())
+        e->OnRemoveMember(this, player, isDisbanding);
 #endif
     return members.empty();
 }
@@ -744,7 +749,8 @@ void Guild::Disband()
     CharacterDatabase.CommitTransaction();
 #ifdef BUILD_ELUNA
     // used by eluna
-    sEluna->OnDisband(this);
+    if (Eluna* e = sWorld.GetEluna())
+        e->OnDisband(this);
 #endif
     sGuildMgr.RemoveGuild(m_Id);
 }

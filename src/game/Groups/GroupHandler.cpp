@@ -212,8 +212,9 @@ void WorldSession::HandleGroupAcceptOpcode(WorldPacket& /*recv_data*/)
     }
 
 #ifdef BUILD_ELUNA
-    if (!sEluna->OnMemberAccept(group, GetPlayer()))
-        return;
+    if (Eluna* e = sWorld.GetEluna())
+        if (!e->OnMemberAccept(group, GetPlayer()))
+            return;
 #endif
 
     Player* leader = sObjectMgr.GetPlayer(group->GetLeaderGuid());

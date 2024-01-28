@@ -243,7 +243,7 @@ bool WorldSocket::ProcessIncomingData()
                 }
 
 #ifdef BUILD_ELUNA
-                if (!sEluna->OnPacketReceive(m_session, *pct))
+                if (!sWorld.GetEluna()->OnPacketReceive(m_session, *pct))
                 {
                     return 0;
                 }
@@ -257,7 +257,7 @@ bool WorldSocket::ProcessIncomingData()
             case CMSG_KEEP_ALIVE:
                 DEBUG_LOG("CMSG_KEEP_ALIVE ,size: " SIZEFMTD " ", pct->size());
 #ifdef BUILD_ELUNA
-                sEluna->OnPacketReceive(m_session, *pct);
+                sWorld.GetEluna()->OnPacketReceive(m_session, *pct);
 #endif
                 return true;
 

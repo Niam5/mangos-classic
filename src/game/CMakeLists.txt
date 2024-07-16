@@ -79,11 +79,6 @@ foreach (TMP_PATH ${LIBRARY_SRCS})
         list(REMOVE_ITEM LIBRARY_SRCS ${TMP_PATH})
     endif ()
 endforeach()
-add_definitions(-DBUILD_ELUNA -DCMANGOS -DCLASSIC)
-endif()
-
-if(BUILD_SOLOCRAFT)
-add_definitions(-DBUILD_SOLOCRAFT)
 endif()
 
 if(NOT BUILD_DEPRECATED_PLAYERBOT)
@@ -138,7 +133,6 @@ target_link_libraries(${LIBRARY_NAME}
   PRIVATE g3dlite
   PRIVATE Detour
   PRIVATE zlib
-  PRIVATE lualib
 )
 
 # include additionals headers
@@ -153,7 +147,6 @@ if(NOT BUILD_PLAYERBOTS)
     ${CMAKE_CURRENT_SOURCE_DIR}/PlayerBot
     ${CMAKE_CURRENT_SOURCE_DIR}/LuaEngine/
     ${CMAKE_CURRENT_SOURCE_DIR}/LuaEngine/methods/CMangos
-    ${CMAKE_CURRENT_SOURCE_DIR}/LuaEngine/hooks
     ${CMAKE_SOURCE_DIR}/dep/lualib
     ${CMAKE_BINARY_DIR}
   )
@@ -166,7 +159,6 @@ else()
     ${CMAKE_CURRENT_SOURCE_DIR}/OutdoorPvP
     ${CMAKE_CURRENT_SOURCE_DIR}/LuaEngine/
     ${CMAKE_CURRENT_SOURCE_DIR}/LuaEngine/methods/CMangos
-    ${CMAKE_CURRENT_SOURCE_DIR}/LuaEngine/hooks
     ${CMAKE_SOURCE_DIR}/dep/lualib
     ${CMAKE_BINARY_DIR}
   )

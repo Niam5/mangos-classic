@@ -1193,7 +1193,7 @@ bool WorldObject::HasStringId(uint32 stringId) const
 
 WorldObject::WorldObject() :
 #ifdef BUILD_ELUNA
-    elunaEvents(NULL),
+    elunaEvents(nullptr),
 #endif
     m_transport(nullptr), m_isOnEventNotified(false),
     m_visibilityData(this), m_currMap(nullptr),
@@ -1206,7 +1206,7 @@ WorldObject::WorldObject() :
 WorldObject::~WorldObject()
 {
     delete elunaEvents;
-    elunaEvents = NULL;
+    elunaEvents = nullptr;
 }
 #endif
 
@@ -1216,20 +1216,12 @@ void WorldObject::CleanupsBeforeDelete()
     RemoveFromWorld();
 }
 
-#ifdef BUILD_ELUNA
-void WorldObject::Update(uint32 update_diff)
-{
-    elunaEvents->Update(update_diff);
-    m_heartBeatTimer.Update(update_diff);
-    while (m_heartBeatTimer.Passed())
-    {
-        m_heartBeatTimer.Reset(m_heartBeatTimer.GetExpiry() + GetHeartbeatDuration());
-        Heartbeat();
-    }
-}
-#else
 void WorldObject::Update(const uint32 diff)
 {
+#ifdef BUILD_ELUNA
+    if (elunaEvents)
+        elunaEvents->Update(diff);
+#endif
     m_heartBeatTimer.Update(diff);
     while (m_heartBeatTimer.Passed())
     {
@@ -1237,7 +1229,6 @@ void WorldObject::Update(const uint32 diff)
         Heartbeat();
     }
 }
-#endif
 
 void WorldObject::_Create(uint32 guidlow, HighGuid guidhigh)
 {
@@ -2010,21 +2001,6 @@ void WorldObject::SetMap(Map* map)
     // lets save current map's Id/instanceId
     m_mapId = map->GetId();
     m_InstanceId = map->GetInstanceId();
-#ifdef BUILD_ELUNA
-    //@todo: possibly look into cleanly clearing all pending events from previous map's event mgr.
-
-    // if multistate, delete elunaEvents and set to nullptr. events shouldn't move across states.
-    // in single state, the timed events should move across maps
-    if (!sElunaConfig->IsElunaCompatibilityMode())
-    {
-        delete elunaEvents;
-        elunaEvents = nullptr; // set to null in case map doesn't use eluna
-    }
-
-    if (Eluna* e = map->GetEluna())
-        if (!elunaEvents)
-            elunaEvents = new ElunaEventProcessor(e, this);
-#endif
 }
 
 void WorldObject::AddToWorld()
@@ -2037,6 +2013,12 @@ void WorldObject::AddToWorld()
             m_currMap->AddStringIdObject(stringId, this);
 
     Object::AddToWorld();
+
+#ifdef BUILD_ELUNA
+    if (Eluna* e = GetEluna())
+        if (!elunaEvents)
+            elunaEvents = new ElunaEventProcessor(e, this);
+#endif
 }
 
 void WorldObject::RemoveFromWorld()
@@ -2050,6 +2032,16 @@ void WorldObject::RemoveFromWorld()
             for (uint32 stringId : m_stringIds)
                 m_currMap->RemoveStringIdObject(stringId, this);
     }
+
+#ifdef BUILD_ELUNA
+    // if multistate, delete elunaEvents and set to nullptr. events shouldn't move across states.
+    // in single state, the timed events should move across maps
+    if (!sElunaConfig->IsElunaCompatibilityMode())
+    {
+        delete elunaEvents;
+        elunaEvents = nullptr; // set to null in case map doesn't use eluna
+    }
+#endif
 
     Object::RemoveFromWorld();
 }

@@ -20,7 +20,7 @@ jobs:
           - COMPILER_CC: clang
             COMPILER_PP: clang++
             USE_PCH: ON
-            EXTRA_BUILD: "-DBUILD_AHBOT=ON -DBUILD_PLAYERBOT=ON -DBUILD_SOLOCRAFT=ON "
+            EXTRA_BUILD: "-DBUILD_AHBOT=ON -DBUILD_PLAYERBOTS=ON -DBUILD_SOLOCRAFT=ON "
 
     steps:
     
@@ -30,7 +30,7 @@ jobs:
           rm -rf ./.??* || true
           
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: ${{env.REPO_DIR}}
           submodules: true
@@ -72,18 +72,16 @@ jobs:
           echo "GIT_SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
 
       - name: Notify
-        uses: rjstone/discord-webhook-notify@v1.0.4
+        uses: rjstone/discord-webhook-notify@v1.1.1
         with:
           severity: error
-          username: ${{env.EXPENSION_NAME}}-core
           description: |
-            **Linux buid failed**
+            **Linux Build Failed**
           details: |
             - **Branch:** ${{env.GIT_BRANCH}}
             - **Pusher:** ${{github.event.pusher.name}}
             - **Author:** ${{github.event.head_commit.author.name}}
             - **Commit:** [${{github.repository}}/${{env.GIT_SHORT_SHA}}](${{github.server_url}}/${{ github.repository }}/commit/${{github.sha}})
-            - **Build log:** [actions/runs/${{github.run_id}}](${{github.server_url}}/${{github.repository}}/actions/runs/${{github.run_id}})
-          footer: Next time ${{github.event.pusher.name}}!
+            - **Build Log:** [actions/runs/${{github.run_id}}](${{github.server_url}}/${{github.repository}}/actions/runs/${{github.run_id}})
+          footer: CMaNGOS Developers Notified!
           webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
-          avatarUrl: https://github.githubassets.com/images/modules/logos_page/Octocat.png

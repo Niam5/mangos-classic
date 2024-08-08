@@ -933,6 +933,10 @@ void World::LoadConfigSettings(bool reload)
     //End Solocraft Config
 #endif
 
+#ifdef BUILD_DUAL_SPEC
+    setConfig(CONFIG_UINT32_DUAL_SPEC_TIME_DELTA, "DualSpecTimeDelta", 300);
+#endif
+
     sLog.outString();
 }
 

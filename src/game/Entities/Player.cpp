@@ -15550,7 +15550,7 @@ InstancePlayerBind* Player::BindToInstance(DungeonPersistentState* state, bool p
 #ifdef BUILD_ELUNA
         // used by eluna
         if (Eluna* e = GetEluna())
-            e->OnBindToInstance(this, NULL, state->GetMapId(), permanent);
+            e->OnBindToInstance(this, 0, state->GetMapId(), permanent);
 #endif
         return &bind;
     }

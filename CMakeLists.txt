@@ -460,6 +460,9 @@ endif()
 
 if(BUILD_DUAL_SPEC)
   set_property(TARGET game mangosd APPEND PROPERTY COMPILE_DEFINITIONS BUILD_DUAL_SPEC)
+  if(BUILD_PLAYERBOTS)
+      set_property(TARGET playerbots APPEND PROPERTY COMPILE_DEFINITIONS BUILD_DUAL_SPEC)
+  endif()
 endif()
 
 # if(SQL)
